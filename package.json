@@ -21,7 +21,8 @@
     "express-rate-limit": "7.4.1",
     "express-session": "1.18.1",
     "qs": "6.13.0",
-    "valibot": "0.42.1"
+    "valibot": "0.42.1",
+    "@discordjs/rest": "^2.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.12.0",
