@@ -1,5 +1,5 @@
 # Discord CAPTCHA Site
-# REMAKE By ExBisam & DexCodeSX
+**REMAKE By ExBisam & DexCodeSX**
 A powerful, advanced captcha verification system for new members in a Discord server.
 
 ## Technologies Used
