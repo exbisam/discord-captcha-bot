@@ -249,6 +249,6 @@ server.get('/verify/logout', async (req, res) => {
 
 const PORT = env.PORT || 8080;
 
-server.listen(PORT);
-
-console.log(`Server is running on port ${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on port ${PORT}`);
+});
