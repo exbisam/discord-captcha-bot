@@ -12,6 +12,7 @@ import {
 } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { pingCommand, uptimeCommand } from './commands/utility';
+import { verificationTracker } from './verification-tracker';
 
 const client = new Client({
   allowedMentions: { parse: ['users', 'roles'], repliedUser: true },
@@ -81,10 +82,13 @@ client.on('ready', async () => {
 });
 
 client.on('guildMemberAdd', async member => {
+  // Track new member for verification
+  verificationTracker.trackNewMember(member);
+
   const embed = new EmbedBuilder()
     .setTitle('Verification')
     .setDescription(
-      `Please solve captcha here: ${process.env.CALLBACK_URL}\nBefore accessing to the server!`,
+      `Please solve captcha here: ${process.env.CALLBACK_URL}\nBefore accessing to the server!\nYou have 10 minutes to verify.`,
     );
 
   await member.send({ embeds: [embed] });

@@ -13,6 +13,7 @@ import { renderFile } from 'ejs';
 
 import client from './index';
 import { env } from './validate-env';
+import { verificationTracker } from './verification-tracker';
 
 const server = express();
 
@@ -170,10 +171,16 @@ server.post('/verify/solve', async (req, res) => {
     captcha_secret = env.TURNSTILE_SECRET;
   }
 
-  // console.log(req.session.verify_userid, req.body[response_body_field]);
-
   if (!req.session.verify_userid || !req.body[response_body_field]) {
     return res.redirect('/verify');
+  }
+
+  const canAttempt = await verificationTracker.handleVerificationAttempt(req.session.verify_userid);
+  if (!canAttempt) {
+    res.render(resolve('./html/error.html'), {
+      messageText: 'Too many verification attempts. Please rejoin the server.',
+    });
+    return;
   }
 
   const options: AxiosRequestConfig = {
@@ -186,23 +193,21 @@ server.post('/verify/solve', async (req, res) => {
   };
 
   const response = await axios(options);
-
   const parsed = response.data;
 
   if (parsed.success && req.session.verify_userid) {
     const fetchedGuild = client.guilds.cache.get(env.SERVER_ID);
-
     const userfetch = await client.users.fetch(req.session.verify_userid);
 
     if (!fetchedGuild) {
       res.redirect('/verify');
-
       return;
     }
 
     const member = await fetchedGuild.members.fetch(userfetch.id);
-
     await member.roles.add(env.VERIFIED_ROLE_ID, 'Verified');
+
+    await verificationTracker.handleSuccessfulVerification(req.session.verify_userid);
 
     req.session.verify_status = 'done';
 
@@ -223,7 +228,6 @@ server.get('/verify/succeed', async (req, res) => {
   if (!req.session.verify_userid) return res.redirect('/verify');
   if (req.session.verify_status !== 'done') return res.redirect('/verify');
 
-  // res.sendFile(resolve('./html/verified.html'));
   res.render(resolve('./html/verified.html'), {
     messageText: 'You are verified!',
   });
@@ -247,7 +251,7 @@ server.get('/verify/logout', async (req, res) => {
   });
 });
 
-const PORT = env.PORT || 8080;
+const PORT = parseInt(env.PORT as string) || 8080;
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
